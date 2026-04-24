@@ -183,68 +183,11 @@ def get_recent_transactions():
 
 @app.get("/api/reports/quarterly")
 def get_quarterly_reports():
-    orders = database.get_orders()
-    quarters = {}
-    quarter_map = {
-        "Q1-2025": ["2025-01", "2025-02", "2025-03"],
-        "Q2-2025": ["2025-04", "2025-05", "2025-06"],
-        "Q3-2025": ["2025-07", "2025-08", "2025-09"],
-        "Q4-2025": ["2025-10", "2025-11", "2025-12"],
-    }
-
-    for order in orders:
-        order_date = order.get("order_date", "")
-        quarter = next(
-            (q for q, months in quarter_map.items() if any(m in order_date for m in months)),
-            None,
-        )
-        if not quarter:
-            continue
-        if quarter not in quarters:
-            quarters[quarter] = {
-                "quarter": quarter,
-                "total_orders": 0,
-                "total_revenue": 0,
-                "delivered_orders": 0,
-                "avg_order_value": 0,
-            }
-        quarters[quarter]["total_orders"] += 1
-        quarters[quarter]["total_revenue"] += order.get("total_value", 0)
-        if order.get("status") == "Delivered":
-            quarters[quarter]["delivered_orders"] += 1
-
-    result = []
-    for q, data in quarters.items():
-        if data["total_orders"] > 0:
-            data["avg_order_value"] = round(data["total_revenue"] / data["total_orders"], 2)
-            data["fulfillment_rate"] = round(
-                (data["delivered_orders"] / data["total_orders"]) * 100, 1
-            )
-        result.append(data)
-
-    result.sort(key=lambda x: x["quarter"])
-    return result
+    return database.get_quarterly_reports()
 
 @app.get("/api/reports/monthly-trends")
 def get_monthly_trends():
-    orders = database.get_orders()
-    months = {}
-
-    for order in orders:
-        order_date = order.get("order_date", "")
-        if not order_date:
-            continue
-        month = order_date[:7]
-        if month not in months:
-            months[month] = {"month": month, "order_count": 0, "revenue": 0, "delivered_count": 0}
-        months[month]["order_count"] += 1
-        months[month]["revenue"] += order.get("total_value", 0)
-        if order.get("status") == "Delivered":
-            months[month]["delivered_count"] += 1
-
-    result = list(months.values())
-    result.sort(key=lambda x: x["month"])
-    return result
+    return database.get_monthly_trends()
 
 @app.get("/api/tasks", response_model=List[Task])
 def get_tasks():
@@ -263,9 +206,8 @@ def create_task(request: CreateTaskRequest):
 
 @app.delete("/api/tasks/{task_id}", status_code=204)
 def delete_task(task_id: str):
-    global _tasks
     original_len = len(_tasks)
-    _tasks = [t for t in _tasks if t["id"] != task_id]
+    _tasks[:] = [t for t in _tasks if t["id"] != task_id]
     if len(_tasks) == original_len:
         raise HTTPException(status_code=404, detail="Task not found")
 
