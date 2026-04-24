@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Factory Inventory Management System Demo with GitHub integration - Full-stack application with Vue 3 frontend, Python FastAPI backend, and in-memory mock data (no database).
+Factory Inventory Management System Demo with GitHub integration - Full-stack application with Vue 3 frontend, Python FastAPI backend, and SQLite database.
 
 ## Critical Tool Usage Rules
 
@@ -26,7 +26,7 @@ Use the Task tool with these specialized subagents for appropriate tasks:
 ## Stack
 - **Frontend**: Vue 3 + Composition API + Vite (port 3000)
 - **Backend**: Python FastAPI (port 8001)
-- **Data**: JSON files in `server/data/` loaded via `server/mock_data.py`
+- **Database**: SQLite (`server/inventory.db`), seeded from JSON files in `server/data/` on first startup via `server/database.py`
 
 ## Quick Start
 
@@ -34,6 +34,7 @@ Use the Task tool with these specialized subagents for appropriate tasks:
 # Backend
 cd server
 uv run python main.py
+# Creates and seeds inventory.db automatically on first run
 
 # Frontend
 cd client
@@ -43,7 +44,7 @@ npm install && npm run dev
 ## Key Patterns
 
 **Filter System**: 4 filters (Time Period, Warehouse, Category, Order Status) apply to all data via query params
-**Data Flow**: Vue filters → `client/src/api.js` → FastAPI → In-memory filtering → Pydantic validation → Computed properties
+**Data Flow**: Vue filters → `client/src/api.js` → FastAPI → SQLite queries (`server/database.py`) → Pydantic validation → Computed properties
 **Reactivity**: Raw data in refs (`allOrders`, `inventoryItems`), derived data in computed properties
 
 ## API Endpoints
@@ -63,8 +64,9 @@ npm install && npm run dev
 ## File Locations
 - Views: `client/src/views/*.vue`
 - API Client: `client/src/api.js`
-- Backend: `server/main.py`, `server/mock_data.py`
-- Data: `server/data/*.json`
+- Backend: `server/main.py`, `server/database.py`
+- Database: `server/inventory.db` (SQLite, auto-created)
+- Seed data: `server/data/*.json`
 - Styles: `client/src/App.vue`
 
 ## Design System

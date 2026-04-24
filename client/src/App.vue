@@ -6,6 +6,22 @@
           <h1>{{ t('nav.companyName') }}</h1>
           <span class="subtitle">{{ t('nav.subtitle') }}</span>
         </div>
+        <div class="world-clock">
+          <div class="world-clock-city">
+            <span class="world-clock-label">LON</span>
+            <span class="world-clock-time">{{ formatTime('Europe/London') }}</span>
+          </div>
+          <div class="world-clock-divider"></div>
+          <div class="world-clock-city">
+            <span class="world-clock-label">NYC</span>
+            <span class="world-clock-time">{{ formatTime('America/New_York') }}</span>
+          </div>
+          <div class="world-clock-divider"></div>
+          <div class="world-clock-city">
+            <span class="world-clock-label">TYO</span>
+            <span class="world-clock-time">{{ formatTime('Asia/Tokyo') }}</span>
+          </div>
+        </div>
         <nav class="nav-tabs">
           <router-link to="/" :class="{ active: $route.path === '/' }">
             {{ t('nav.overview') }}
@@ -55,7 +71,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { api } from './api'
 import { useAuth } from './composables/useAuth'
 import { useI18n } from './composables/useI18n'
@@ -77,6 +93,24 @@ export default {
   setup() {
     const { currentUser } = useAuth()
     const { t } = useI18n()
+
+    // World clock
+    const currentTime = ref(new Date())
+    const clockInterval = setInterval(() => {
+      currentTime.value = new Date()
+    }, 1000)
+    onUnmounted(() => clearInterval(clockInterval))
+
+    const formatTime = (timezone) => {
+      return new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: timezone
+      }).format(currentTime.value)
+    }
+
     const showProfileDetails = ref(false)
     const showTasks = ref(false)
     const apiTasks = ref([])
@@ -150,6 +184,7 @@ export default {
 
     return {
       t,
+      formatTime,
       showProfileDetails,
       showTasks,
       tasks,
@@ -482,5 +517,49 @@ tbody tr:hover {
   border-radius: 8px;
   margin: 1rem 0;
   font-size: 0.938rem;
+}
+
+.world-clock {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: 1.5rem;
+  padding: 0.375rem 0.875rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+
+.world-clock-city {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.world-clock-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  line-height: 1;
+}
+
+.world-clock-time {
+  font-family: 'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #0f172a;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.world-clock-divider {
+  width: 1px;
+  height: 24px;
+  background: #e2e8f0;
+  flex-shrink: 0;
 }
 </style>
